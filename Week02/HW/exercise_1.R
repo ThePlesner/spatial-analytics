@@ -40,23 +40,6 @@ library(spDataLarge)
 # We wrote the code to create a new map of New Zealand.
 # Your role is to improve this map based on the suggestions below.
 
-tm_shape(nz_elev)  +
-  tm_raster(title = "elev", 
-            style = "cont",
-            palette = "BuGn") +
-  tm_shape(nz) +
-  tm_borders(col = "red", 
-             lwd = 3) +
-  tm_scale_bar(breaks = c(0, 100, 200),
-               text.size = 1) +
-  tm_compass(position = c("LEFT", "center"),
-             type = "rose", 
-             size = 2) +
-  tm_credits(text = "A. Sobotkova, 2020") +
-  tm_layout(main.title = "My map",
-            bg.color = "orange",
-            inner.margins = c(0, 0, 0, 0))
-
 #### Exercise I ####
 
 # 1. Change the map title from "My map" to "New Zealand".
@@ -70,12 +53,22 @@ tm_shape(nz_elev)  +
 #    Decrease the line width.
 # 8. Change the background color to any color of your choice.
 
-# Your solution
-
-# /Start Code/ #
-
-
-# /End Code/ #
+tm_shape(nz_elev)  +
+  tm_raster(title = "elev m.", 
+            style = "cont",
+            palette = "-RdYlGn") +
+  tm_shape(nz) +
+  tm_borders(col = "black", 
+             lwd = 1) +
+  tm_scale_bar(breaks = c(0, 50, 100, 150, 200),
+               text.size = 1) +
+  tm_compass(position = c("RIGHT", "top"),
+             type = "rose", 
+             size = 2) +
+  tm_credits(text = "M, Plesner, 2021") +
+  tm_layout(main.title = "New Zealand",
+            bg.color = "#42a7f5",
+            inner.margins = c(0, 0, 0, 0))
 
 #### Exercise II ####
 
@@ -88,6 +81,24 @@ zion = read_sf(system.file("vector/zion.gpkg", package = "spDataLarge"))
 # Your solution
 
 # /Start Code/ #
+tm_shape(srtm)  +
+  tm_raster(title = "Elev. m. asl", 
+            style = "cont",
+            palette = "-RdYlGn") +
+  tm_shape(zion) +
+  tm_borders(col = "blue", 
+             lwd = 1) +
+  tm_scale_bar(breaks = c(0, 2, 4, 6, 8),
+               position = c("LEFT", "bottom"),
+               text.size = 1) +
+  tm_compass(position = c("RIGHT", "top"),
+             type = "rose", 
+             size = 2) +
+  tm_credits(text = "M.Plesner, 2021-02-14",
+             position = c("LEFT", "bottom"),) +
+  tm_layout(main.title = "Zion National Park",
+            legend.position = c("left","center"),
+            inner.margins = c(0, 0, 0, 0))
+  
+  
 
-
-# /End Code/ #

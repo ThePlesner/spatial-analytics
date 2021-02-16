@@ -31,19 +31,19 @@ In this exercise you will read in three shapefiles (one point file and two polyg
 
 ```{r load, eval=FALSE, echo=TRUE}
 # Load the sf package
-___(___)
+library('sf')
 
 # Read in the trees shapefile
-trees <- ___("data/trees.shp")
+trees <- st_read("data/trees.shp")
 
 # Read in the neighborhood shapefile
-neighborhoods <- ___(___)
+neighborhoods <- st_read('data/neighborhoods.shp')
 
 # Read in the parks shapefile
-parks <- ___(___)
+parks <- st_read('data/parks.shp')
 
 # View the first few trees
-___(___)
+head(trees)
 ```
 
 ## Questions: 
@@ -73,25 +73,29 @@ Multi-band rasters will have more than one layer. An example is a color aerial p
 
 ```{r loadraster, eval=FALSE, echo=TRUE}
 # Load the raster package
-___(___)
+library('raster')
 
 # Read in the tree canopy single-band raster
-canopy <- ___(___)
+canopy <- raster('data/canopy.tif')
 
 # Read in the manhattan Landsat image multi-band raster
-manhattan <- ___(___)
+manhattan <- brick('data/manhattan.tif')
 
 # Get the class for the new objects
-class(___)
-class(___)
+class(canopy)
+class(manhattan)
 
 # Identify how many layers each object has
-nlayers(___)
-nlayers(___)
+nlayers(canopy)
+nlayers(manhattan)
+
+canopy
+manhattan
 ```
 
 Questions:
 
 1. What are the dimensions (number of columns and rows) of the `canopy` raster?
+
 2. What is the resolution of `manhattan`?
 
