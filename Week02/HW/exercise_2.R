@@ -66,7 +66,7 @@ lc_data_masked <- mask(crop(lc_data, study_area), study_area)
 # Your solution (type answer to the questions as code comments and the code used)
 
 # /Start Code/ #
-
+View(zion)
 
 
 # /End Code/ #

@@ -99,8 +99,19 @@ This file is a 457x465 raster with a resolution of ~0.0008. It is a 3D CRS with 
 # Create a new object `zion2`
 # Vizualize the results using the `plot()` function.
 
+srtm2 <- srtm
 
+srtm2 <- projectRaster(srtm2, crs = st_crs(zion)$proj4string)
+
+plot(srtm2)
 
 ```
+```{r}
+zion2 <- zion
 
+zion2 <- st_transform(zion, crs = crs(srtm, asText = TRUE))
+
+plot(srtm)
+
+```
 
