@@ -1,0 +1,9 @@
+base
+knitr
+rmdformats
+sf
+sp
+raster
+dplyr
+ggplot2
+tmap
