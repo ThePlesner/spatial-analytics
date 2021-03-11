@@ -1,0 +1,145 @@
+---
+title: "Burial_mound_health"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library('sf')
+library('raster')
+library('tidyverse')
+library('tmap')
+```
+## The Question
+In this exercise i will look at the condition of the mounds in relation to their surroundings. As such, my research question is: Is there a correlation between the health/condition of the burial mounds and their surrounding environments, more precisely the landuse, their elevation, the slope of the mounds, and lastly the aspect of the mounds. 
+
+I will start by making some simple operations both in order to get started but also to get familiar with the data. 
+
+### Initial work
+Lets start by loading in the data.
+```{r message=FALSE, results='hide'}
+mounds_data <- read_csv('./data/KAZ_mdata.csv')
+mounds_shp <- st_read('./data/KAZ_mounds.shp')
+```
+First we look at the csv
+
+```{r}
+head(mounds_data)
+```
+We have a key, describing each mound in the MoundID, a condition-score ranging from 1-5 where 5 is the worst condition, a boolean value describing whether the mound has been robbed, a height, and a column describing how the surrounding area is best described. 
+
+Then we have the shapefile.
+
+```{r}
+head(mounds_shp)
+```
+Here we have a "TRAP_Code" which corresponds with the id in the csv file. THere's also coordinates and the usual geometry column containing the actual geo-data which we can see is on the form of points. 
+
+To make life easier, we can join the two datasets together.
+```{r}
+mounds <- left_join(mounds_shp, mounds_data, by=c("TRAP_Code" = "MoundID"))
+```
+### Mean condition
+If we then aggregate the mean conditions for each landuse, we get the following table
+```{r}
+condition_by_landuse <- aggregate(mounds$Condition, list(mounds$LandUse), mean)
+
+print(condition_by_landuse)
+```
+Looking at this simple operation, we can see that mounds located on beaches are on average in worse condition than for example mounds located in forests or pastures. In general one could say, that the beach-mounds has a worse condition than the mounds located on land. Knowledge about weather and simple intuition causes this to make sense, as the corrosion will be worse as the weather conditions are harsher on the beach. 
+### Mound condition by elevation
+We saw that certain landuses could potentially have an effect on the condition of the mounds. Another element playing a role in the condition of the mounds could be the elevation. The Aster.tif file gives us the elevations of the mounds. 
+```{r}
+aster <- raster('data/Aster.tif')
+head(aster)
+```
+Looking at the raster, we can see that it contains alot of -9999 values for the points outside the boundary. We change these to NA to get them out of the picture. 
+```{r}
+aster <- reclassify(aster, cbind(-Inf, 0, NA), right = FALSE)
+```
+
+```{r}
+#Check if the crs is the same
+st_crs(mounds)
+crs(aster)
+
+#Cropping the elevation the bounding box of mounds
+elevation <- crop(aster, st_bbox(mounds))
+
+#Looking at the cropped map
+tm_shape(elevation) +
+	tm_raster(title = 'Elevation m.') +
+tm_shape(mounds) + 
+	tm_dots() +
+	tm_layout(
+		'Burial Mounds in Kazanlak',
+		title.position = c('right', 'bottom'),
+		legend.position = c('left', 'bottom')
+	)
+
+# Adding a new column to our mounds data containing the elevation for a given mound
+mounds_elev <- raster::extract(elevation, mounds)
+mounds$Elevation <- mounds_elev
+
+# Compare elevation and condition using average elevation
+condition_by_elev <- st_drop_geometry(mounds) %>%
+	group_by(Condition) %>%
+	drop_na() %>% # there are a few missing values for Elevation
+	summarise(
+		Elevation = mean(Elevation)
+	)
+
+#looking at our new column
+print(condition_by_elev)
+
+#Comparing to looting (robbed)
+robbed_by_elev <- st_drop_geometry(mounds) %>%
+	group_by(Robbed) %>%
+	drop_na() %>% # there are a few missing values for Elevation and Robbed 
+	summarise(
+		Elevation = mean(Elevation)
+	)
+print(robbed_by_elev)
+```
+We can see that in terms of the mounds in worst condition, they seem to have a lower elevation than the rest. Then one could conclude that lower altitude mounds are in worse condition in general, but that would be faulty if we look at the other condition values. Value 4 the soars to having the highest altitude amongst all condition values, and from there they slowly descent. What this means i am not sure but it could indicate some correlation between elevation and condition. Perhaps if one added the landuse to the comparison, we could see that some landuse correlate with certain elevations, and the answer could lie there. That has been deemed outside the scope for this late sunday evening but could be interesting to look at. 
+
+In terms of looting, the robbed mounds seem to have a lower elevation than the ones that havent been robbed, but the difference isnt high and the result is inconclusive if you ask me. The logical explaination would be, that higher altitude mounds are harder to rob but for this to be descisive, more work is needed. 
+
+## Slope
+So what about slope. Looking at the slope we have 2 elements. The slope itself and the aspect, which is the direction of the slope.
+```{r}
+#First we load in the slopes and the aspects using the terrain function. 
+slope_raster <- raster::terrain(elevation, opt='slope', unit='degrees', neighbors=4)
+aspect_raster <- raster::terrain(elevation, opt='aspect', unit='degrees', neighbors=4)
+
+#We then add the two to our mounds data
+mounds <- mounds %>%
+  mutate(slope = raster::extract(slope_raster, mounds)) %>%
+  mutate(aspect = raster::extract(aspect_raster, mounds))
+
+
+# Look at the correlation between slope and condition
+condition_by_slope <- st_drop_geometry(mounds) %>%
+	group_by(Condition) %>%
+	drop_na() %>% # there are a few missing values for Slope
+	summarise(
+		Slope = mean(slope)
+	)
+
+print(condition_by_slope)
+
+# Look at the correlation between aspect and condition
+condition_by_aspect <- st_drop_geometry(mounds) %>%
+	group_by(Condition) %>%
+	drop_na() %>% # there are a few missing values for Slope
+	summarise(
+		Aspect = mean(aspect)
+	)
+
+print(condition_by_aspect)
+```
+
+In terms of the slope, there seems to be no real correlation between that and the condition of the mounds. For some reason, the mounds with a condition value of 3 seems to have a steeper slope than the rest and the reason for that seems unknown to me. 
+
+On the other hand, looking at the aspect we see that the mounds in worst condition are pointing towards south-south-west, while the rest points more towards south-south-east. The mounds in best condition points directly south. Now, what this exactly means i dont know but it would seem that the aspect has some sort of role to play. The aspects we're looking at here are only mean-values, so it would be more interesting to look at individual mounds of the worst condition and see what direction they are pointing. 

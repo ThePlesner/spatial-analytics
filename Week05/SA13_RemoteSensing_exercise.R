@@ -44,6 +44,7 @@ library(RColorBrewer)
 library(rasterVis)
 library(rgdal)
 library(rgl)
+library(plot3D)
 
 # load and plot the dem in landsat package
 data(dem)
